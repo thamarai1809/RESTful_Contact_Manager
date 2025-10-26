@@ -1,0 +1,170 @@
+.container {
+  max-width: 1600px;
+  margin: 10px auto;
+  padding: 20px;
+  background: #78cce8;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(167, 103, 103, 0.1);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  color: #0d0d0d;
+  margin-bottom: 30px;
+  font-size: 3rem; /* Bigger font */
+  text-transform: uppercase; /* Convert to all caps */
+  font-weight: bold;
+}
+
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+input {
+  padding: 20px;
+  border: 3px solid #0a0909;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  transition: border 0.3s;
+}
+
+input:focus {
+  border-color: #a1b0c0;
+  outline: none;
+}
+
+.btn {
+  padding: 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.add {
+  background-color: #060707;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.add:hover {
+  background-color: #14467c;
+}
+
+.update {
+  background-color: #28a745;
+  color: white;
+}
+
+.update:hover {
+  background-color: #1e7e34;
+}
+
+.toggle {
+  background-color: #0c567d;
+  color: white;
+  border: 3px solid #0a0909;
+  font-size: 1.2rem;
+}
+
+.toggle:hover {
+  background-color: #2d6fa2;
+}
+
+.edit {
+  background-color: #ffc107;
+  color: #212529;
+  margin-right: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: 0.3s;
+  font-size: 1rem;
+}
+
+.edit:hover {
+  background-color: #e0a800;
+}
+
+.delete {
+  background-color: #dc3545;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: 0.3s;
+  font-size: 1rem;
+}
+
+.delete:hover {
+  background-color: #c82333;
+}
+
+.contact-table {
+  width: 100%;
+  margin-top: 30px;
+  border-collapse: collapse;
+}
+
+.contact-table th,
+.contact-table td {
+  border: 3px solid #ddd;
+  padding: 15px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.contact-table th {
+  background-color: #141515;
+  color: white;
+}
+
+.contact-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.contact-table tr:hover {
+  background-color: #d0e7ff;
+}
+
+.search {
+  width: 100%;
+  padding: 10px;
+  margin: 15px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1.2rem;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+  gap: 8px;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #b8c5d2;
+  background-color: white;
+  color: #007bff;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 1.1rem;
+}
+
+.pagination button:hover {
+  background-color: #0f1822;
+  color: white;
+}
+
+.pagination button.active {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}

@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: global body styling */
+body {
+  @apply bg-gradient-to-br from-purple-600 via-pink-500 to-yellow-400 min-h-screen;
+  @apply text-white font-sans;
+}
+
