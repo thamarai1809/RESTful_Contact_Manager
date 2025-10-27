@@ -9,7 +9,7 @@ A full-stack Contact Management application with a **React frontend** and **Node
 - Create, read, update, and delete (CRUD) contacts.
 - Responsive React frontend.
 - RESTful API backend with Node.js and Express.
-- Data stored in a database (SQLite).
+- Data stored in a database (Mongo Atlas).
 - Search and filter contacts.
 
 
@@ -24,7 +24,7 @@ A full-stack Contact Management application with a **React frontend** and **Node
 **Backend:**
 - Node.js
 - Express.js
-- Database (SQLite)
+- Database (Mongo Atlas)
 - dotenv (for environment variables)
 
 **Other:**
