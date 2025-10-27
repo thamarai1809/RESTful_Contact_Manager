@@ -31,6 +31,8 @@ A full-stack Contact Management application with a **React frontend** and **Node
 - Git & GitHub
 - Thunder Client (for API testing)
 
+**Deployed link:**
+- https://res-tful-contact-manager.vercel.app/
 
 
 
