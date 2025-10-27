@@ -1,32 +1,34 @@
 import React, { useState, useEffect } from "react";
-// Verwyder die App.css-invoer om die 'kon nie oplos nie' fout reg te stel.
-// Die stylering word nou direk in die komponent toegepas.
 
-// HARDCODEER die API-URL omdat 'import.meta.env' nie beskikbaar is nie.
-// Maak seker dat hierdie HTTPS-URL na die Render-agterkant verwys.
+// The environment variable 'import.meta.env.VITE_API_URL' is not available in this target environment.
+// We are hardcoding the confirmed Render URL to resolve the error.
 const API_URL = "https://restful-contact-manager01.onrender.com/api/contacts";
 
-// BELANGRIK: Moet nooit window.alert of window.confirm in die Canvas-omgewing gebruik nie.
+// Helper components for icons (mimicking Lucide Icons for aesthetic reasons)
+const Search = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>);
+const Trash2 = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M13 6V4a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v2"/></svg>);
+const Edit = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 3a2.85 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>);
+
 
 export default function App() {
   const [contacts, setContacts] = useState([]);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
-  const [editing, setEditing] = useState(null);
+  const [editing, setEditing] = useState(null); // Holds the _id of the contact being edited
   const [showContacts, setShowContacts] = useState(false);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [message, setMessage] = useState(null); // Pasgemaakte toestand vir status-/foutboodskappe
+  const [message, setMessage] = useState(null); // Custom state for status/error messages
   const [isLoading, setIsLoading] = useState(false);
   const contactsPerPage = 5;
 
-  // Funksie om boodskappe tydelik te vertoon
-  const displayMessage = (msg) => {
-    setMessage(msg);
+  // Function to temporarily display messages
+  const displayMessage = (msg, type = 'success') => {
+    setMessage({ text: msg, type });
     setTimeout(() => setMessage(null), 3000);
   };
 
-  // Haal kontakte van die agterkant af
+  // Function to fetch contacts from the backend
   const fetchContacts = async (page = currentPage) => {
     setIsLoading(true);
     try {
@@ -34,27 +36,27 @@ export default function App() {
         `${API_URL}?page=${page}&limit=${contactsPerPage}&search=${search}`
       );
       if (!res.ok) {
-        throw new Error(`HTTP fout! Status: ${res.status}`);
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
       const data = await res.json();
       setContacts(data.contacts || []);
       setTotalPages(data.pages || 1);
       if (data.contacts.length === 0 && page > 1) {
-        // Indien die huidige bladsy leeg is, gaan terug na die vorige een
+        // If the current page is empty, go back to the previous one
         setCurrentPage(Math.max(1, page - 1));
       }
     } catch (err) {
-      console.error("Fout met die haal van kontakte:", err);
-      displayMessage(`Fout met die haal van kontakte: ${err.message}`);
+      console.error("Error fetching contacts:", err);
+      displayMessage(`Error fetching contacts: ${err.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Haal kontakte wanneer die relevante afhanklikhede verander
+  // Fetch contacts when relevant dependencies change
   useEffect(() => {
     if (showContacts) {
-      // Klein ontspan vir soek om oormatige API-oproepe te voorkom
+      // Small debouncing for search to prevent excessive API calls
       const handler = setTimeout(() => {
         fetchContacts();
       }, 300);
@@ -62,9 +64,9 @@ export default function App() {
     }
   }, [currentPage, search, showContacts]);
 
-  // Voeg nuwe kontak by
+  // Add new contact
   const handleAdd = async () => {
-    if (!form.name || !form.email || !form.phone) return displayMessage("Vul asseblief alle velde in!");
+    if (!form.name || !form.email || !form.phone) return displayMessage("Please fill in all fields!", 'warning');
     setIsLoading(true);
     try {
       const res = await fetch(API_URL, {
@@ -79,26 +81,25 @@ export default function App() {
       }
 
       setForm({ name: "", email: "", phone: "" });
-      displayMessage("Kontak suksesvol bygevoeg!");
+      displayMessage("Contact successfully added!");
       
-      // KRITIESE OPLOSSING: Roep fetchContacts uitdruklik om die aansig te verfris
-      // na suksesvolle skepping.
+      // CRITICAL FIX: Explicitly call fetchContacts to refresh the view
       fetchContacts(currentPage); 
       
-      // Indien kontakte versteek was, wys dit outomaties na byvoeging
+      // If contacts were hidden, show them automatically after adding
       if (!showContacts) {
         setShowContacts(true);
       }
 
     } catch (err) {
-      console.error("Fout met die byvoeging van kontak:", err);
-      displayMessage(`Fout met die byvoeging van kontak: ${err.message}`);
+      console.error("Error adding contact:", err);
+      displayMessage(`Error adding contact: ${err.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Dateer kontak op
+  // Update contact
   const handleUpdate = async () => {
     if (!editing) return;
     setIsLoading(true);
@@ -116,21 +117,21 @@ export default function App() {
 
       setForm({ name: "", email: "", phone: "" });
       setEditing(null);
-      displayMessage("Kontak suksesvol opgedateer!");
+      displayMessage("Contact successfully updated!");
       fetchContacts(currentPage);
     } catch (err) {
-      console.error("Fout met die opdatering van kontak:", err);
-      displayMessage(`Fout met die opdatering van kontak: ${err.message}`);
+      console.error("Error updating contact:", err);
+      displayMessage(`Error updating contact: ${err.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Skrap kontak
+  // Delete contact
   const handleDelete = async (id) => {
-    // Gebruik 'n in-app bevestiging in plaas van window.confirm
-    const confirmed = window.confirm("Is jy seker jy wil hierdie kontak skrap?");
-    if (!confirmed) return;
+    // NOTE: Using window.confirm as a temporary in-app confirmation mechanism
+    // In a production app, this should be replaced by a custom modal UI.
+    if (!window.confirm("Are you sure you want to delete this contact?")) return;
 
     setIsLoading(true);
     try {
@@ -141,20 +142,20 @@ export default function App() {
         throw new Error(errorData.message || `Status: ${res.status}`);
       }
 
-      displayMessage("Kontak suksesvol geskrap!");
-      // Herhaal, wat paginering randgevalle hanteer
+      displayMessage("Contact successfully deleted!");
+      // Re-fetch, which handles page edge cases
       fetchContacts(currentPage); 
     } catch (err) {
-      console.error("Fout met die skrap van kontak:", err);
-      displayMessage(`Fout met die skrap van kontak: ${err.message}`);
+      console.error("Error deleting contact:", err);
+      displayMessage(`Error deleting contact: ${err.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Stel kontak op vir redigering
+  // Set contact up for editing
   const handleEdit = (c) => {
-    // Gebruik die MongoDB _id vir redigering/opdatering
+    // Use the MongoDB _id for editing/updating
     setEditing(c._id); 
     setForm({ 
         name: c.name, 
@@ -163,293 +164,207 @@ export default function App() {
     });
   };
 
-  // Stel vorm terug wanneer redigering gekanselleer word
+  // Reset form when editing is canceled
   const handleCancelEdit = () => {
     setEditing(null);
     setForm({ name: "", email: "", phone: "" });
   };
 
-  // Vereenvoudigde stylering (vervang App.css)
-  const styles = {
-    container: {
-      maxWidth: '800px',
-      margin: '40px auto',
-      padding: '20px',
-      backgroundColor: '#f4f7f6',
-      borderRadius: '12px',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-      fontFamily: 'Arial, sans-serif',
-    },
-    title: {
-      textAlign: 'center',
-      color: '#333',
-      marginBottom: '30px',
-      borderBottom: '2px solid #ccc',
-      paddingBottom: '10px',
-    },
-    form: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '10px',
-      marginBottom: '20px',
-      padding: '15px',
-      backgroundColor: '#fff',
-      borderRadius: '8px',
-      boxShadow: '0 2px 5px rgba(0, 0, 0, 0.05)',
-    },
-    input: {
-      flexGrow: 1,
-      padding: '10px',
-      borderRadius: '5px',
-      border: '1px solid #ddd',
-    },
-    button: {
-      padding: '10px 15px',
-      borderRadius: '5px',
-      border: 'none',
-      cursor: 'pointer',
-      transition: 'background-color 0.3s',
-      color: 'white',
-      fontWeight: 'bold',
-    },
-    buttonAdd: {
-      backgroundColor: '#007bff',
-      flexGrow: 1,
-    },
-    buttonUpdate: {
-      backgroundColor: '#28a745',
-      flexGrow: 1,
-    },
-    buttonCancel: {
-      backgroundColor: '#dc3545',
-      flexGrow: 1,
-    },
-    buttonToggle: {
-      backgroundColor: '#6c757d',
-      flexGrow: 1,
-    },
-    search: {
-      width: '100%',
-      padding: '10px',
-      borderRadius: '5px',
-      border: '1px solid #ddd',
-      marginBottom: '20px',
-    },
-    table: {
-      width: '100%',
-      borderCollapse: 'collapse',
-      marginTop: '20px',
-      backgroundColor: '#fff',
-      borderRadius: '8px',
-      overflow: 'hidden',
-      boxShadow: '0 2px 5px rgba(0, 0, 0, 0.05)',
-    },
-    th: {
-      padding: '12px',
-      backgroundColor: '#007bff',
-      color: 'white',
-      textAlign: 'left',
-    },
-    td: {
-      padding: '12px',
-      borderBottom: '1px solid #eee',
-    },
-    actionButton: {
-      marginRight: '8px',
-      padding: '5px 10px',
-      borderRadius: '4px',
-      border: 'none',
-      cursor: 'pointer',
-      fontSize: '14px',
-    },
-    buttonEdit: {
-      backgroundColor: '#ffc107',
-      color: '#333',
-    },
-    buttonDelete: {
-      backgroundColor: '#dc3545',
-      color: 'white',
-    },
-    pagination: {
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '10px',
-      marginTop: '20px',
-    },
-    message: {
-      padding: '15px',
-      borderRadius: '5px',
-      marginBottom: '20px',
-      fontWeight: 'bold',
-    },
-    success: {
-      backgroundColor: '#d4edda',
-      color: '#155724',
-      border: '1px solid #c3e6cb',
-    },
-    error: {
-      backgroundColor: '#f8d7da',
-      color: '#721c24',
-      border: '1px solid #f5c6cb',
-    },
+  // Tailwind CSS Class Definitions for Aesthetics
+  const containerClasses = "max-w-4xl mx-auto p-4 md:p-8 bg-gray-100 rounded-2xl shadow-2xl mt-10 font-sans";
+  const inputClasses = "w-full px-4 py-3 border border-gray-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150";
+  const buttonClasses = "w-full py-3 mt-4 text-white rounded-lg transition duration-200 shadow-md flex items-center justify-center";
+  const isFormDisabled = isLoading && !editing;
+  
+  // Styles for the message box
+  const getMessageClasses = (type) => {
+    switch (type) {
+        case 'error':
+            return "bg-red-100 border-red-400 text-red-700";
+        case 'warning':
+            return "bg-yellow-100 border-yellow-400 text-yellow-700";
+        case 'success':
+        default:
+            return "bg-green-100 border-green-400 text-green-700";
+    }
   };
 
-  const isFormDisabled = isLoading && !editing;
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Kontak Bestuurder</h1>
+    <div className={containerClasses}>
+      <h1 className="text-4xl font-extrabold text-center text-gray-900 mb-8 tracking-wider">
+        CONTACT MANAGER
+      </h1>
 
+      {/* Message Display */}
       {message && (
-        <div style={{ ...styles.message, ...(message.includes("Fout") ? styles.error : styles.success) }}>
-          {message}
+        <div className={`border px-4 py-3 rounded relative mb-4 ${getMessageClasses(message.type)}`} role="alert">
+            <p className="font-bold">
+              {message.type === 'error' ? 'Error:' : message.type === 'warning' ? 'Warning:' : 'Success:'}
+            </p>
+            <span className="block sm:inline ml-2">{message.text}</span>
         </div>
       )}
 
-      <div style={styles.form}>
+      <div className="space-y-4">
         <input
           type="text"
-          placeholder="Naam"
+          placeholder="Name"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className={inputClasses}
           disabled={isFormDisabled}
-          style={styles.input}
         />
         <input
           type="email"
-          placeholder="E-pos"
+          placeholder="Email"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
+          className={inputClasses}
           disabled={isFormDisabled}
-          style={styles.input}
         />
         <input
           type="tel"
-          placeholder="Foon"
+          placeholder="Phone"
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          className={inputClasses}
           disabled={isFormDisabled}
-          style={styles.input}
         />
 
         {editing ? (
-          <>
+          <div className="flex space-x-4">
             <button 
-              style={{...styles.button, ...styles.buttonUpdate}} 
-              onClick={handleUpdate} 
-              disabled={isLoading}
+                className={`${buttonClasses} bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 w-1/2`} 
+                onClick={handleUpdate} 
+                disabled={isLoading}
             >
-              {isLoading ? "Besig om op te dateer..." : "Dateer Kontak Op"}
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : "Update Contact"}
             </button>
             <button 
-              style={{...styles.button, ...styles.buttonCancel}} 
-              onClick={handleCancelEdit} 
-              disabled={isLoading}
+                className={`${buttonClasses} bg-gray-500 hover:bg-gray-600 focus:ring-gray-400 w-1/2`} 
+                onClick={handleCancelEdit} 
+                disabled={isLoading}
             >
-              Kanselleer
+              Cancel
             </button>
-          </>
+          </div>
         ) : (
           <button 
-            style={{...styles.button, ...styles.buttonAdd}} 
+            className={`${buttonClasses} bg-green-600 hover:bg-green-700 focus:ring-green-500`} 
             onClick={handleAdd} 
             disabled={isLoading}
           >
-            {isLoading ? "Besig om by te voeg..." : "Voeg Kontak By"}
+            {isLoading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            ) : "Add Contact"}
           </button>
         )}
 
         <button
-          style={{...styles.button, ...styles.buttonToggle}}
+          className={`${buttonClasses} bg-blue-800 hover:bg-blue-900 focus:ring-blue-600`}
           onClick={() => setShowContacts(!showContacts)}
           disabled={isLoading}
         >
-          {showContacts ? "Versteek Kontakte" : "Sien Kontakte"}
+          {showContacts ? "Hide Contacts" : "View Contacts"}
         </button>
       </div>
 
       {showContacts && (
-        <>
-          {/* Soekbalk */}
-          <input
-            type="text"
-            placeholder="Soek op naam"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-            style={styles.search}
-            disabled={isLoading}
-          />
+        <div className="mt-8">
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by Name"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={`${inputClasses} pl-10`}
+              disabled={isLoading}
+            />
+          </div>
 
-          {/* Kontakte tabel */}
-          {isLoading && contacts.length === 0 ? (
-            <div style={{textAlign: 'center', padding: '20px'}}>Besig om kontakte te laai...</div>
-          ) : (
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={styles.th}>Naam</th>
-                  <th style={styles.th}>E-pos</th>
-                  <th style={styles.th}>Foon</th>
-                  <th style={styles.th}>Aksies</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contacts.length > 0 ? (
-                  contacts.map((c) => (
-                    <tr key={c._id}> 
-                      <td style={styles.td}>{c.name}</td>
-                      <td style={styles.td}>{c.email}</td>
-                      <td style={styles.td}>{c.phone}</td>
-                      <td style={styles.td}>
-                        <button 
-                          style={{...styles.actionButton, ...styles.buttonEdit}} 
-                          onClick={() => handleEdit(c)}
-                        >
-                          Wysig
-                        </button>
-                        <button
-                          style={{...styles.actionButton, ...styles.buttonDelete}}
-                          onClick={() => handleDelete(c._id)} 
-                        >
-                          Skrap
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" style={{ textAlign: "center", padding: '12px' }}>
-                      Geen kontakte gevind nie.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+          {/* Contacts Table */}
+          <div className="overflow-x-auto shadow-xl rounded-lg">
+            {isLoading && contacts.length === 0 ? (
+                <div className="text-center py-6 text-gray-500 bg-white">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 inline-block mr-2"></div>
+                    Loading contacts...
+                </div>
+            ) : (
+                <table className="min-w-full bg-white border-collapse">
+                    <thead>
+                      <tr className="bg-gray-800 text-white text-left text-sm font-semibold tracking-wider">
+                        <th className="p-4 rounded-tl-lg">Name</th>
+                        <th className="p-4">Email</th>
+                        <th className="p-4">Phone</th>
+                        <th className="p-4 rounded-tr-lg text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {contacts.length > 0 ? (
+                        contacts.map((c) => (
+                          // Use Mongoose _id for key and operations
+                          <tr key={c._id} className="border-t border-gray-200 hover:bg-gray-50 transition duration-150"> 
+                            <td className="p-4">{c.name}</td>
+                            <td className="p-4">{c.email}</td>
+                            <td className="p-4">{c.phone}</td>
+                            <td className="p-4 text-center whitespace-nowrap">
+                              <button 
+                                onClick={() => handleEdit(c)}
+                                className="text-blue-600 hover:text-blue-800 transition duration-150 mr-3 p-1 rounded hover:bg-blue-100"
+                                title="Edit"
+                              >
+                                <Edit className="inline-block" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(c._id)} // Use _id here
+                                className="text-red-600 hover:text-red-800 transition duration-150 p-1 rounded hover:bg-red-100"
+                                title="Delete"
+                              >
+                                <Trash2 className="inline-block" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="text-center py-6 text-gray-500">
+                            No contacts found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                </table>
+            )}
+          </div>
 
-          {/* Paginering */}
+          {/* Pagination */}
           {totalPages > 1 && (
-            <div style={styles.pagination}>
+            <div className="flex justify-center space-x-2 mt-6">
               <button
-                style={styles.button}
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1 || isLoading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50"
               >
-                Vorige
+                Previous
               </button>
 
               {[...Array(totalPages)].map((_, i) => (
                 <button
                   key={i + 1}
-                  style={{
-                    ...styles.button,
-                    backgroundColor: currentPage === i + 1 ? '#0056b3' : '#ddd',
-                    color: currentPage === i + 1 ? 'white' : '#333',
-                  }}
                   onClick={() => setCurrentPage(i + 1)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition duration-150 ${
+                    currentPage === i + 1
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-100"
+                  }`}
                   disabled={isLoading}
                 >
                   {i + 1}
@@ -457,17 +372,17 @@ export default function App() {
               ))}
 
               <button
-                style={styles.button}
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages || isLoading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50"
               >
-                Volgende
+                Next
               </button>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
