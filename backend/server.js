@@ -8,28 +8,10 @@ const contactRoutes = require("./src/routes/contactRoutes");
 dotenv.config();
 const app = express();
 
-// --- START FIX: Custom CORS Configuration (KEPT AS IS) ---
-const allowedOrigins = [
-    // IMPORTANT: Allowing your live Vercel frontend domain!
-    "https://res-tful-contact-manager.vercel.app", 
-    // Allowing local development environments
-    "http://localhost:3000",
-    "http://localhost:5173" 
-];
-
+// --- START FIX: TEMPORARILY ALLOW ALL ORIGINS TO RULE OUT CORS ISSUE ---
+// This is for TESTING purposes only. Revert to the specific allowedOrigins list later.
 const corsOptions = {
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps, curl)
-        if (!origin) return callback(null, true); 
-        
-        // Check if the requesting origin is in the allowed list
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            // Block all other origins
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: "*", // Allow ALL origins for testing
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true, // Allow cookies and authentication headers
     optionsSuccessStatus: 204
