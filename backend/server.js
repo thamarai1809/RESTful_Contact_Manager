@@ -1,4 +1,5 @@
-// server.js
+// --- Assuming this is your main backend file (server.js) ---
+
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -8,14 +9,45 @@ const contactRoutes = require("./src/routes/contactRoutes");
 dotenv.config();
 const app = express();
 
-app.use(cors());
+// --- START FIX: Custom CORS Configuration ---
+const allowedOrigins = [
+    // IMPORTANT: Allowing your live Vercel frontend domain!
+    "https://res-tful-contact-manager.vercel.app", 
+    // Allowing local development environments
+    "http://localhost:3000",
+    "http://localhost:5173" 
+];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl)
+        if (!origin) return callback(null, true); 
+        
+        // Check if the requesting origin is in the allowed list
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            // Block all other origins
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true, // Allow cookies and authentication headers
+    optionsSuccessStatus: 204
+};
+
+// 1. Apply configured CORS middleware
+app.use(cors(corsOptions));
+// --- END FIX ---
+
 app.use(express.json());
 app.use("/api/contacts", contactRoutes);
 
 const PORT = process.env.PORT || 5000;
 
 (async () => {
-  await connectDB();
-  await sequelize.sync({ alter: true }); // Creates or updates the table automatically
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    // Ensuring database connection and synchronization runs before the server starts listening
+    await connectDB();
+    await sequelize.sync({ alter: true }); // Creates or updates the table automatically
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 })();
