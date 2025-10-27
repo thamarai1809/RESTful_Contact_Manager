@@ -1,26 +1,21 @@
-// backend/src/config/db.js
-const path = require('path');
-const { Sequelize } = require('sequelize');
+const mongoose = require("mongoose");
 
-// Use env var DB_FILE if provided (production with persistent disk).
-// Otherwise use a local file in the project for development.
-const dbFile = process.env.DB_FILE || path.join(__dirname, '..', '..', 'contacts.sqlite');
-
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: dbFile,
-  logging: false,
-});
-
+/**
+ * @desc Establishes a connection to MongoDB Atlas using the MONGO_URI environment variable.
+ */
 const connectDB = async () => {
   try {
-    await sequelize.authenticate();
-    console.log('✅ Database connected successfully. DB file:', dbFile);
+    // Attempt to connect to the MongoDB URI
+    const conn = await mongoose.connect(process.env.MONGO_URI);
+    
+    console.log(`✅ MongoDB Connected successfully: ${conn.connection.host}`);
   } catch (error) {
-    console.error('❌ Unable to connect to the database:', error);
-    throw error;
+    console.error(`❌ Unable to connect to MongoDB: ${error.message}`);
+    
+    // Exit process with failure code if connection fails
+    process.exit(1);
   }
 };
 
-module.exports = { sequelize, connectDB };
-
+// Export only the Mongoose connection function
+module.exports = { connectDB };

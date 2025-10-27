@@ -1,26 +1,26 @@
-// src/models/Contact.js
-const { DataTypes } = require("sequelize");
-const { sequelize } = require("../config/db");
+const mongoose = require("mongoose");
 
-const Contact = sequelize.define("Contact", {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
+const ContactSchema = mongoose.Schema(
+  {
+    // MongoDB automatically creates an _id field for the primary key
+    name: {
+      type: String,
+      required: [true, "Please add the contact name"],
+    },
+    email: {
+      type: String,
+      required: [true, "Please add the contact email address"],
+      unique: true, // Ensures email addresses are unique
+    },
+    phone: {
+      type: String,
+      required: [true, "Please add the contact phone number"],
+    },
   },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  email: {
-    type: DataTypes.STRING,
-    unique: true,
-    allowNull: false,
-  },
-  phone: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-});
+  {
+    timestamps: true, // Adds createdAt and updatedAt timestamps
+  }
+);
 
-module.exports = Contact;
+// Export the model based on the schema
+module.exports = mongoose.model("Contact", ContactSchema);

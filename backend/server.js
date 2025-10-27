@@ -1,15 +1,14 @@
-// --- Assuming this is your main backend file (server.js) ---
-
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const { connectDB, sequelize } = require("./src/config/db");
+// --- MODIFIED: Removed sequelize import, only need connectDB from Mongoose config ---
+const { connectDB } = require("./src/config/db");
 const contactRoutes = require("./src/routes/contactRoutes");
 
 dotenv.config();
 const app = express();
 
-// --- START FIX: Custom CORS Configuration ---
+// --- START FIX: Custom CORS Configuration (KEPT AS IS) ---
 const allowedOrigins = [
     // IMPORTANT: Allowing your live Vercel frontend domain!
     "https://res-tful-contact-manager.vercel.app", 
@@ -46,8 +45,10 @@ app.use("/api/contacts", contactRoutes);
 const PORT = process.env.PORT || 5000;
 
 (async () => {
-    // Ensuring database connection and synchronization runs before the server starts listening
+    // 1. Call the Mongoose connectDB function
     await connectDB();
-    await sequelize.sync({ alter: true }); // Creates or updates the table automatically
+    
+    // --- REMOVED: Deleted the sequelize.sync() call, as it is no longer relevant for MongoDB ---
+    
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 })();
